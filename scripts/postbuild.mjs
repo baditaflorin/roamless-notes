@@ -31,7 +31,10 @@ writeFileSync(
   `${JSON.stringify(
     {
       buildTime: globalThis.__APP_BUILD_TIME__ ?? new Date().toISOString(),
-      commit: gitValue('git rev-parse --short HEAD', 'local'),
+      commit: gitValue(
+        'git log -1 --format=%h -- . ":(exclude)docs"',
+        'local',
+      ),
       repository: 'https://github.com/baditaflorin/roamless-notes',
       version: process.env.npm_package_version ?? '0.1.0',
     },

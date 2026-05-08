@@ -13,7 +13,10 @@ const fromGit = (command: string, fallback: string) => {
   }
 }
 
-const commit = fromGit('git rev-parse --short HEAD', 'local')
+const commit = fromGit(
+  'git log -1 --format=%h -- . ":(exclude)docs"',
+  'local',
+)
 const version = process.env.npm_package_version ?? '0.1.0'
 
 // https://vite.dev/config/
