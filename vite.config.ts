@@ -13,10 +13,7 @@ const fromGit = (command: string, fallback: string) => {
   }
 }
 
-const commit = fromGit(
-  'git log -1 --format=%h -- . ":(exclude)docs"',
-  'local',
-)
+const commit = fromGit('git log -1 --format=%h -- . ":(exclude)docs"', 'local')
 const commitDate = fromGit(
   'git log -1 --format=%cI -- . ":(exclude)docs"',
   new Date().toISOString(),
