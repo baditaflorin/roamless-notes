@@ -30,7 +30,10 @@ writeFileSync(
   'docs/version.json',
   `${JSON.stringify(
     {
-      buildTime: globalThis.__APP_BUILD_TIME__ ?? new Date().toISOString(),
+      buildTime: gitValue(
+        'git log -1 --format=%cI -- . ":(exclude)docs"',
+        new Date().toISOString(),
+      ),
       commit: gitValue(
         'git log -1 --format=%h -- . ":(exclude)docs"',
         'local',

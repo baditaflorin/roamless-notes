@@ -17,13 +17,17 @@ const commit = fromGit(
   'git log -1 --format=%h -- . ":(exclude)docs"',
   'local',
 )
+const commitDate = fromGit(
+  'git log -1 --format=%cI -- . ":(exclude)docs"',
+  new Date().toISOString(),
+)
 const version = process.env.npm_package_version ?? '0.1.0'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: `/${repoName}/`,
   define: {
-    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __APP_BUILD_TIME__: JSON.stringify(commitDate),
     __APP_COMMIT__: JSON.stringify(commit),
     __APP_REPOSITORY_URL__: JSON.stringify(
       'https://github.com/baditaflorin/roamless-notes',
