@@ -30,6 +30,7 @@ export default defineConfig({
   build: {
     assetsDir: 'app-assets',
     emptyOutDir: false,
+    modulePreload: false,
     outDir: 'docs',
     rollupOptions: {
       output: {
