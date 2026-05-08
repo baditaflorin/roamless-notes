@@ -11,7 +11,9 @@ if (!existsSync(indexPath)) {
 const html = readFileSync(indexPath, 'utf8')
 
 if (!html.includes('/roamless-notes/app-assets/')) {
-  throw new Error('docs/index.html does not reference the GitHub Pages base path')
+  throw new Error(
+    'docs/index.html does not reference the GitHub Pages base path',
+  )
 }
 
 copyFileSync(indexPath, fallbackPath)

@@ -12,6 +12,7 @@ dist
 dist-ssr
 tmp/
 coverage/
+test-results/
 .env
 .env.*
 !.env.example
@@ -19,7 +20,6 @@ coverage/
 *.key
 *.crt
 *.p12
-*.local
 *.local
 
 # Go

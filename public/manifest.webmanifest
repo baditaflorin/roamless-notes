@@ -1,0 +1,16 @@
+{
+  "name": "Roamless Notes",
+  "short_name": "Roamless",
+  "description": "Local-first outliner with backlinks, graph search, semantic recall, and optional peer-to-peer sync.",
+  "start_url": "/roamless-notes/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#0c0a09",
+  "icons": [
+    {
+      "src": "/roamless-notes/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
