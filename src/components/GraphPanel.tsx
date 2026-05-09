@@ -5,6 +5,7 @@ import {
   blockTitle,
   extractLinksFromText,
   extractTagsFromText,
+  normalizeConcept,
 } from '../lib/text'
 import type { BlockRecord, GraphNode } from '../types'
 
@@ -13,6 +14,7 @@ type Props = {
   selectedId: string | null
   onConceptQuery: (query: string) => void
   onSelectBlock: (id: string) => void
+  showLabels: boolean
 }
 
 export const GraphPanel = ({
@@ -20,16 +22,22 @@ export const GraphPanel = ({
   selectedId,
   onConceptQuery,
   onSelectBlock,
+  showLabels,
 }: Props) => {
   const graph = useMemo(() => buildGraph(blocks), [blocks])
   const selected = blocks.find((block) => block.id === selectedId) ?? blocks[0]
   const links = selected ? extractLinksFromText(selected.text) : []
   const tags = selected ? extractTagsFromText(selected.text) : []
+  const backlinkTargets = new Set(
+    [selected ? blockTitle(selected) : '', ...links].map(normalizeConcept),
+  )
   const incoming = selected
-    ? blocks.filter((block) =>
-        extractLinksFromText(block.text)
-          .map((link) => link.toLowerCase())
-          .includes(blockTitle(selected).toLowerCase()),
+    ? blocks.filter(
+        (block) =>
+          block.id !== selected.id &&
+          extractLinksFromText(block.text).some((link) =>
+            backlinkTargets.has(normalizeConcept(link)),
+          ),
       )
     : []
   const positions = useMemo(() => layoutNodes(graph.nodes), [graph.nodes])
@@ -102,17 +110,19 @@ export const GraphPanel = ({
                   opacity={selectedNode ? 1 : 0.86}
                   r={selectedNode ? 8 : node.kind === 'block' ? 5 : 7}
                 />
-                <text
-                  fill="rgba(255,255,255,0.78)"
-                  fontSize="10"
-                  textAnchor="middle"
-                  x={point.x}
-                  y={point.y + 18}
-                >
-                  {node.label.length > 18
-                    ? `${node.label.slice(0, 16)}...`
-                    : node.label}
-                </text>
+                {showLabels ? (
+                  <text
+                    fill="rgba(255,255,255,0.78)"
+                    fontSize="10"
+                    textAnchor="middle"
+                    x={point.x}
+                    y={point.y + 18}
+                  >
+                    {node.label.length > 18
+                      ? `${node.label.slice(0, 16)}...`
+                      : node.label}
+                  </text>
+                ) : null}
               </g>
             )
           })}

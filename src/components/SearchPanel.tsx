@@ -14,13 +14,17 @@ import {
   type SemanticEntry,
   type SemanticHit,
 } from '../features/semantic/semanticClient'
+import { copyText, downloadText } from '../lib/browserIo'
+import { messageFromError, type Notice } from '../lib/notices'
 import { blockTitle } from '../lib/text'
 import type { BlockRecord } from '../types'
 
 type Props = {
   activeTab: ExplorerTab
+  addNotice: (notice: Omit<Notice, 'id'>) => void
   blocks: BlockRecord[]
   blockQuery: string
+  fuzzySearch: boolean
   onBlockQueryChange: (query: string) => void
   onSelectBlock: (id: string) => void
   onTabChange: (tab: ExplorerTab) => void
@@ -30,14 +34,19 @@ export type ExplorerTab = 'search' | 'query' | 'sql' | 'semantic'
 
 export const SearchPanel = ({
   activeTab,
+  addNotice,
   blocks,
   blockQuery,
+  fuzzySearch,
   onBlockQueryChange,
   onSelectBlock,
   onTabChange,
 }: Props) => {
   const [search, setSearch] = useState('graph')
-  const index = useMemo(() => createSearchIndex(blocks), [blocks])
+  const index = useMemo(
+    () => createSearchIndex(blocks, fuzzySearch),
+    [blocks, fuzzySearch],
+  )
   const searchHits = useMemo(
     () => searchBlocks(index, blocks, search),
     [blocks, index, search],
@@ -110,9 +119,15 @@ export const SearchPanel = ({
             />
           </div>
         ) : null}
-        {activeTab === 'sql' ? <DuckPanel blocks={blocks} /> : null}
+        {activeTab === 'sql' ? (
+          <DuckPanel addNotice={addNotice} blocks={blocks} />
+        ) : null}
         {activeTab === 'semantic' ? (
-          <SemanticPanel blocks={blocks} onSelectBlock={onSelectBlock} />
+          <SemanticPanel
+            addNotice={addNotice}
+            blocks={blocks}
+            onSelectBlock={onSelectBlock}
+          />
         ) : null}
       </div>
     </section>
@@ -175,7 +190,13 @@ const ResultList = ({
   </div>
 )
 
-const DuckPanel = ({ blocks }: { blocks: BlockRecord[] }) => {
+const DuckPanel = ({
+  addNotice,
+  blocks,
+}: {
+  addNotice: (notice: Omit<Notice, 'id'>) => void
+  blocks: BlockRecord[]
+}) => {
   const [sql, setSql] = useState(defaultDuckSql)
   const [rows, setRows] = useState<DuckRow[]>([])
   const [busy, setBusy] = useState(false)
@@ -188,11 +209,13 @@ const DuckPanel = ({ blocks }: { blocks: BlockRecord[] }) => {
     try {
       setRows(await runDuckDbQuery(blocks, sql))
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'DuckDB query failed')
+      setError(messageFromError(caught, 'DuckDB query failed'))
     } finally {
       setBusy(false)
     }
   }
+
+  const rowsJson = `${JSON.stringify(rows, null, 2)}\n`
 
   return (
     <div className="space-y-3">
@@ -210,6 +233,37 @@ const DuckPanel = ({ blocks }: { blocks: BlockRecord[] }) => {
       >
         {busy ? 'Running' : 'Run SQL'}
       </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          className="secondary-button"
+          disabled={rows.length === 0}
+          onClick={async () => {
+            const result = await copyText(rowsJson)
+            addNotice({
+              message: result.message,
+              title: 'SQL rows copied',
+              tone: result.ok ? 'success' : 'error',
+            })
+          }}
+          type="button"
+        >
+          Copy rows
+        </button>
+        <button
+          className="secondary-button"
+          disabled={rows.length === 0}
+          onClick={() =>
+            downloadText({
+              contents: rowsJson,
+              fileName: 'roamless-duckdb-results.json',
+              mimeType: 'application/json',
+            })
+          }
+          type="button"
+        >
+          Download rows
+        </button>
+      </div>
       {error ? <p className="panel-error">{error}</p> : null}
       {rows.length > 0 ? (
         <div className="overflow-auto rounded-md border border-stone-200">
@@ -234,9 +288,11 @@ const DuckPanel = ({ blocks }: { blocks: BlockRecord[] }) => {
 }
 
 const SemanticPanel = ({
+  addNotice,
   blocks,
   onSelectBlock,
 }: {
+  addNotice: (notice: Omit<Notice, 'id'>) => void
   blocks: BlockRecord[]
   onSelectBlock: (id: string) => void
 }) => {
@@ -259,9 +315,7 @@ const SemanticPanel = ({
         ),
       )
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : 'Model loading failed',
-      )
+      setError(messageFromError(caught, 'Model loading failed'))
     } finally {
       setBusy(false)
     }
@@ -279,9 +333,7 @@ const SemanticPanel = ({
       setSemanticIndex(nextIndex)
       setHits(await semanticSearch(blocks, nextIndex, query))
     } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : 'Semantic search failed',
-      )
+      setError(messageFromError(caught, 'Semantic search failed'))
     } finally {
       setBusy(false)
     }
@@ -296,7 +348,7 @@ const SemanticPanel = ({
         await summarizeLocally(blocks.map((block) => block.text).join('\n')),
       )
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Summary failed')
+      setError(messageFromError(caught, 'Summary failed'))
     } finally {
       setBusy(false)
     }
@@ -341,9 +393,23 @@ const SemanticPanel = ({
       ) : null}
       {error ? <p className="panel-error">{error}</p> : null}
       {summary ? (
-        <p className="rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950">
-          {summary}
-        </p>
+        <div className="rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950">
+          <p>{summary}</p>
+          <button
+            className="mt-3 rounded-md border border-sky-300 px-3 py-1 text-xs font-semibold"
+            onClick={async () => {
+              const result = await copyText(summary)
+              addNotice({
+                message: result.message,
+                title: 'Summary copied',
+                tone: result.ok ? 'success' : 'error',
+              })
+            }}
+            type="button"
+          >
+            Copy summary
+          </button>
+        </div>
       ) : null}
       <ResultList
         items={hits.map((hit) => ({

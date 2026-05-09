@@ -1,35 +1,35 @@
 import { openDB } from 'idb'
 import * as Y from 'yjs'
-import { z } from 'zod'
 import { createId } from '../../lib/ids'
 import type { BlockId, BlockRecord } from '../../types'
+import {
+  createWorkspaceState,
+  defaultWorkspaceSettings,
+  normalizeWorkspaceState,
+  type WorkspaceSettings,
+  type WorkspaceState,
+  workspaceSettingsSchema,
+} from '../workspace/workspaceSchema'
 import { createSeedBlocks } from './seed'
 import { buildTree } from './tree'
 
 const DB_NAME = 'roamless-notes'
 const DB_VERSION = 1
 const STORE_NAME = 'snapshots'
+const META_KEY = 'meta'
 const SNAPSHOT_KEY = 'main'
 
-const blockSchema = z.object({
-  createdAt: z.string(),
-  id: z.string(),
-  order: z.number(),
-  parentId: z.string().nullable(),
-  text: z.string(),
-  updatedAt: z.string(),
-})
-
-const importSchema = z.object({
-  blocks: z.array(blockSchema),
-  exportedAt: z.string(),
-  schemaVersion: z.literal(1),
-})
+type PersistedMeta = {
+  selectedId: BlockId | null
+  settings: WorkspaceSettings
+  schemaVersion: 2
+}
 
 export type NotesSnapshot = {
   blocks: BlockRecord[]
   ready: boolean
   selectedId: BlockId | null
+  settings: WorkspaceSettings
 }
 
 type Listener = () => void
@@ -51,17 +51,25 @@ export class NoteStore {
     blocks: [],
     ready: false,
     selectedId: null,
+    settings: defaultWorkspaceSettings,
   }
   private saveTimer: number | undefined
   private selectedId: BlockId | null = null
+  private settings: WorkspaceSettings = defaultWorkspaceSettings
   private ready = false
 
   async initialize() {
     const database = await getDatabase()
     const snapshot = await database.get(STORE_NAME, SNAPSHOT_KEY)
+    const meta = await database.get(STORE_NAME, META_KEY)
 
     if (snapshot instanceof Uint8Array) {
       Y.applyUpdate(this.doc, snapshot)
+    }
+
+    if (isPersistedMeta(meta)) {
+      this.selectedId = meta.selectedId
+      this.settings = meta.settings
     }
 
     if (this.blocksMap.size === 0) {
@@ -73,7 +81,10 @@ export class NoteStore {
     }
 
     this.ready = true
-    this.selectedId = this.getBlocks()[0]?.id ?? null
+    this.selectedId =
+      this.selectedId && this.blocksMap.has(this.selectedId)
+        ? this.selectedId
+        : (this.getBlocks()[0]?.id ?? null)
     this.doc.on('update', this.handleDocumentUpdate)
     await this.persist()
     this.emit()
@@ -98,8 +109,22 @@ export class NoteStore {
   }
 
   selectBlock(id: BlockId) {
+    if (!this.blocksMap.has(id)) {
+      return
+    }
+
     this.selectedId = id
     this.emit()
+    void this.persistMeta()
+  }
+
+  updateSettings(settings: Partial<WorkspaceSettings>) {
+    this.settings = {
+      ...this.settings,
+      ...settings,
+    }
+    this.emit()
+    void this.persistMeta()
   }
 
   updateBlock(id: BlockId, text: string) {
@@ -160,6 +185,8 @@ export class NoteStore {
       const replacement = this.createBlock('Untitled', null, 0)
       this.blocksMap.set(replacement.id, replacement)
       this.selectedId = replacement.id
+      this.emit()
+      void this.persist()
       return
     }
 
@@ -236,47 +263,68 @@ export class NoteStore {
   }
 
   resetDemo() {
-    this.doc.transact(() => {
-      for (const id of [...this.blocksMap.keys()]) {
-        this.blocksMap.delete(id)
-      }
+    this.replaceBlocks(createSeedBlocks())
+  }
 
-      for (const block of createSeedBlocks()) {
-        this.blocksMap.set(block.id, block)
-      }
+  clearWorkspace() {
+    const first = this.createBlock('Untitled', null, 0)
+    this.replaceBlocks([first])
+  }
+
+  exportWorkspace(): WorkspaceState {
+    return createWorkspaceState({
+      blocks: this.getBlocks(),
+      selectedId: this.selectedId,
+      settings: this.settings,
     })
-
-    this.selectedId = this.getBlocks()[0]?.id ?? null
-    this.emit()
   }
 
   exportJson() {
-    return JSON.stringify(
-      {
-        blocks: this.getBlocks(),
-        exportedAt: new Date().toISOString(),
-        schemaVersion: 1,
-      },
-      null,
-      2,
-    )
+    return `${JSON.stringify(this.exportWorkspace(), null, 2)}\n`
   }
 
   importJson(value: string) {
-    const parsed = importSchema.parse(JSON.parse(value))
+    this.importWorkspace(normalizeWorkspaceState(JSON.parse(value)))
+  }
 
+  importWorkspace(state: WorkspaceState) {
+    this.settings = state.settings
+    this.selectedId = state.selectedId
+    this.replaceBlocks(state.blocks)
+  }
+
+  appendBlocks(blocks: BlockRecord[]) {
+    const rootCount = this.getSiblings(null).length
+    const cloned = cloneBlocksForAppend(blocks, rootCount)
+
+    this.doc.transact(() => {
+      for (const block of cloned) {
+        this.blocksMap.set(block.id, block)
+      }
+    })
+
+    this.selectedId = cloned[0]?.id ?? this.selectedId
+    this.emit()
+    void this.persist()
+  }
+
+  private replaceBlocks(blocks: BlockRecord[]) {
     this.doc.transact(() => {
       for (const id of [...this.blocksMap.keys()]) {
         this.blocksMap.delete(id)
       }
 
-      for (const block of parsed.blocks) {
+      for (const block of normalizeBlockOrder(blocks)) {
         this.blocksMap.set(block.id, block)
       }
     })
 
-    this.selectedId = parsed.blocks[0]?.id ?? null
+    this.selectedId =
+      this.selectedId && this.blocksMap.has(this.selectedId)
+        ? this.selectedId
+        : (this.getBlocks()[0]?.id ?? null)
     this.emit()
+    void this.persist()
   }
 
   getTree() {
@@ -298,6 +346,17 @@ export class NoteStore {
       Y.encodeStateAsUpdate(this.doc),
       SNAPSHOT_KEY,
     )
+    await this.persistMeta()
+  }
+
+  private async persistMeta() {
+    const database = await getDatabase()
+    const meta: PersistedMeta = {
+      schemaVersion: 2,
+      selectedId: this.selectedId,
+      settings: this.settings,
+    }
+    await database.put(STORE_NAME, meta, META_KEY)
   }
 
   private emit() {
@@ -305,6 +364,7 @@ export class NoteStore {
       blocks: this.getBlocks(),
       ready: this.ready,
       selectedId: this.selectedId,
+      settings: this.settings,
     }
 
     for (const listener of this.listeners) {
@@ -355,4 +415,58 @@ export class NoteStore {
       })
     })
   }
+}
+
+const isPersistedMeta = (value: unknown): value is PersistedMeta => {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const candidate = value as Partial<PersistedMeta>
+
+  return (
+    candidate.schemaVersion === 2 &&
+    typeof candidate.selectedId !== 'undefined' &&
+    workspaceSettingsSchema.safeParse(candidate.settings).success
+  )
+}
+
+const normalizeBlockOrder = (blocks: BlockRecord[]) => {
+  const siblingIndex = new Map<string | null, number>()
+
+  return blocks.map((block) => {
+    const order = siblingIndex.get(block.parentId) ?? 0
+    siblingIndex.set(block.parentId, order + 1)
+
+    return {
+      ...block,
+      order,
+    }
+  })
+}
+
+const cloneBlocksForAppend = (blocks: BlockRecord[], rootOffset: number) => {
+  const idMap = new Map<string, string>()
+  const timestamp = new Date().toISOString()
+
+  for (const block of blocks) {
+    idMap.set(block.id, createId())
+  }
+
+  return normalizeBlockOrder(
+    blocks.map((block) => ({
+      ...block,
+      createdAt: block.createdAt || timestamp,
+      id: idMap.get(block.id) ?? createId(),
+      parentId: block.parentId ? (idMap.get(block.parentId) ?? null) : null,
+      updatedAt: timestamp,
+    })),
+  ).map((block) =>
+    block.parentId
+      ? block
+      : {
+          ...block,
+          order: block.order + rootOffset,
+        },
+  )
 }

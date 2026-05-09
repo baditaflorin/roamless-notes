@@ -17,4 +17,22 @@
 | Graph node click       | Yellow | Opens query/select, backlink logic weak for concept pages. | Keep and fix selected/backlink behavior.                          |
 | Star/Fork/PayPal links | Green  | Header links work.                                         | Keep.                                                             |
 
-Before counts: green 6, yellow 8, red 0, gray 0.
+## After Implementation
+
+| Control                               | After | Evidence                                                                          |
+| ------------------------------------- | ----- | --------------------------------------------------------------------------------- |
+| New root block                        | Green | Smoke-tested.                                                                     |
+| JSON export                           | Green | Full state export.                                                                |
+| Markdown export                       | Green | Smoke-tested download.                                                            |
+| CSV export                            | Green | Unit-tested exporter.                                                             |
+| Import                                | Green | Multi-format parser and smoke-tested Markdown import.                             |
+| Paste/clipboard/URL import            | Green | Shared import parser with visible notices.                                        |
+| Load demo                             | Green | Explicit demo replacement, respects confirmation setting.                         |
+| Start fresh                           | Green | Explicit clear workspace, respects confirmation setting.                          |
+| Settings                              | Green | Four settings persist and change editor/search/graph/confirmation behavior.       |
+| Copy/share/print                      | Green | Copy and print smoke-tested; share has size guard.                                |
+| Move/indent/delete block controls     | Green | Existing behavior preserved.                                                      |
+| Search/query/DuckDB/semantic controls | Green | Search/query preserved; DuckDB/semantic outputs now copy/download where relevant. |
+| Star/Fork/PayPal links                | Green | Existing behavior preserved.                                                      |
+
+Before counts: green 6, yellow 8, red 0, gray 0. After counts: green 13, yellow 0, red 0, gray 0.

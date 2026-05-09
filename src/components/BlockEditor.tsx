@@ -3,18 +3,15 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
-  Download,
   Plus,
-  RotateCcw,
   Trash2,
-  Upload,
 } from 'lucide-react'
-import { useRef } from 'react'
 import type { NoteStore } from '../features/notes/noteStore'
 import { flattenTree } from '../features/notes/tree'
 import type { BlockTreeNode } from '../types'
 
 type Props = {
+  compact: boolean
   store: NoteStore
   tree: BlockTreeNode[]
   selectedId: string | null
@@ -28,26 +25,11 @@ const focusBlock = (id: string) => {
   })
 }
 
-export const BlockEditor = ({ store, tree, selectedId }: Props) => {
-  const importRef = useRef<HTMLInputElement | null>(null)
+export const BlockEditor = ({ compact, store, tree, selectedId }: Props) => {
   const flat = flattenTree(tree)
 
-  const exportNotes = () => {
-    const blob = new Blob([store.exportJson()], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `roamless-notes-${new Date().toISOString().slice(0, 10)}.json`
-    anchor.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const importNotes = async (file: File) => {
-    store.importJson(await file.text())
-  }
-
   return (
-    <section className="flex min-h-0 flex-col border-r border-stone-200 bg-stone-50">
+    <section className="flex min-h-0 flex-1 flex-col border-r border-stone-200 bg-stone-50">
       <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 bg-white px-3 py-2">
         <button
           aria-label="New root block"
@@ -58,52 +40,16 @@ export const BlockEditor = ({ store, tree, selectedId }: Props) => {
         >
           <Plus size={16} />
         </button>
-        <button
-          aria-label="Export JSON"
-          className="icon-button"
-          onClick={exportNotes}
-          title="Export JSON"
-          type="button"
-        >
-          <Download size={16} />
-        </button>
-        <button
-          aria-label="Import JSON"
-          className="icon-button"
-          onClick={() => importRef.current?.click()}
-          title="Import JSON"
-          type="button"
-        >
-          <Upload size={16} />
-        </button>
-        <button
-          aria-label="Reset demo"
-          className="icon-button"
-          onClick={() => store.resetDemo()}
-          title="Reset demo"
-          type="button"
-        >
-          <RotateCcw size={16} />
-        </button>
-        <input
-          ref={importRef}
-          accept="application/json"
-          className="hidden"
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-
-            if (file) {
-              void importNotes(file)
-            }
-          }}
-          type="file"
-        />
+        <span className="text-xs text-stone-500">
+          Enter adds a sibling. Tab indents.
+        </span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-3 py-3">
         {flat.map((block) => (
           <BlockRow
             block={block}
             key={block.id}
+            compact={compact}
             selected={selectedId === block.id}
             store={store}
           />
@@ -115,11 +61,12 @@ export const BlockEditor = ({ store, tree, selectedId }: Props) => {
 
 type RowProps = {
   block: BlockTreeNode
+  compact: boolean
   selected: boolean
   store: NoteStore
 }
 
-const BlockRow = ({ block, selected, store }: RowProps) => {
+const BlockRow = ({ block, compact, selected, store }: RowProps) => {
   const addAfter = () =>
     focusBlock(store.addBlock(block.parentId, block.id) ?? '')
 
@@ -164,7 +111,7 @@ const BlockRow = ({ block, selected, store }: RowProps) => {
             store.deleteBlock(block.id)
           }
         }}
-        rows={Math.max(1, Math.ceil(block.text.length / 74))}
+        rows={compact ? 1 : Math.max(1, Math.ceil(block.text.length / 74))}
         value={block.text}
       />
       <div className="flex opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">

@@ -18,4 +18,22 @@ Status legend: green = works end-to-end, yellow = partial, red = claimed or expe
 | Folder import                | Gray   | Browser folder APIs add complexity beyond v1.                                                         | ADR marks folder import out of scope.                                            |
 | Deep-link imported state     | Red    | No hash/share import.                                                                                 | Green: small notebooks can load from URL hash.                                   |
 
-Before counts: green 0, yellow 3, red 7, gray 2.
+## After Implementation
+
+| Input pathway                | After | Evidence                                                                     |
+| ---------------------------- | ----- | ---------------------------------------------------------------------------- |
+| Demo/sample loader           | Green | `Load demo` is explicit and separate from fresh start.                       |
+| Restored autosave            | Green | Blocks, selected block, and settings persist in IndexedDB metadata/snapshot. |
+| Downloaded state file import | Green | v1/v2 JSON state validates and migrates through shared schema.               |
+| Multi-file upload            | Green | File input accepts multiple JSON/Markdown/text/HTML files.                   |
+| Drag and drop                | Green | Workspace panel handles dropped files and text.                              |
+| Paste plain text             | Green | Paste box imports text as blocks.                                            |
+| Paste HTML                   | Green | HTML parser extracts headings, paragraphs, list items, quotes, and pre text. |
+| Paste image                  | Gray  | Text-only v1; ADR 0061 keeps OCR/attachments out of scope.                   |
+| URL input                    | Green | URL fetch imports public text/HTML and reports CORS fallback guidance.       |
+| Clipboard read button        | Green | Clipboard read imports text or shows fallback notice.                        |
+| Mobile file picker           | Green | Visible import control uses mobile-compatible file input.                    |
+| Folder import                | Gray  | ADR 0061 keeps folder import out of scope.                                   |
+| Deep-link imported state     | Green | Hash-encoded workspace state loads on first app open.                        |
+
+Before counts: green 0, yellow 3, red 7, gray 2. After counts: green 11, yellow 0, red 0, gray 2.

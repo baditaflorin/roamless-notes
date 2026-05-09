@@ -10,4 +10,15 @@
 | App header     | Version and commit visible                                 | Green  | Keep.                                                                      |
 | In-app buttons | JSON import/export                                         | Yellow | Finish.                                                                    |
 
-Before counts: green 2, yellow 3, red 2, gray 0.
+## After Implementation
+
+| Claim                                              | After   | Evidence                                                      |
+| -------------------------------------------------- | ------- | ------------------------------------------------------------- |
+| Portable CRDT-safe import/export                   | Green   | Full v2 state export/import and v1 migration.                 |
+| IndexedDB/Yjs local persistence                    | Green   | Existing storage plus metadata/settings persistence.          |
+| Search/backlinks/graph/DuckDB/semantic local tools | Green   | Existing tools preserved; outputs and limitations documented. |
+| Settings in browser storage                        | Green   | Real persisted settings added.                                |
+| Version/commit/header links                        | Green   | Existing behavior preserved.                                  |
+| Live peer-to-peer sync                             | Removed | Reworded as out-of-scope/portable state, not a shipped claim. |
+
+Before counts: green 2, yellow 3, red 2, gray 0. After counts: green 5, yellow 0, red 0, removed 1.

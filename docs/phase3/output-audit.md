@@ -13,4 +13,19 @@
 | Embed code            | Gray   | No public hosted documents or stable embeds.                      | ADR marks out of scope.                                         |
 | API/curl-ready output | Gray   | Mode A has no runtime API.                                        | Stable JSON/CSV documented instead.                             |
 
-Before counts: green 0, yellow 2, red 5, gray 3.
+## After Implementation
+
+| Output pathway        | After | Evidence                                                                         |
+| --------------------- | ----- | -------------------------------------------------------------------------------- |
+| JSON state export     | Green | Exports v2 full workspace with blocks, selected block, settings, timestamp.      |
+| JSON round-trip       | Green | Unit test covers v2 state shape and v1 migration.                                |
+| Markdown export       | Green | Exports nested Markdown bullets and is smoke-tested by download.                 |
+| CSV export            | Green | Exports stable blocks table with escaped cells.                                  |
+| Copy to clipboard     | Green | Markdown, selected block, SQL rows, and summary paths have copy actions/notices. |
+| Share link            | Green | Small workspaces produce hash URLs; oversized state gives export guidance.       |
+| Print/PDF view        | Green | Print action and print stylesheet are smoke-tested.                              |
+| Screenshot export     | Gray  | Browser-native screenshots remain out of scope.                                  |
+| Embed code            | Gray  | No hosted documents/embeds in Mode A v1.                                         |
+| API/curl-ready output | Gray  | Stable JSON/CSV is documented instead of an API.                                 |
+
+Before counts: green 0, yellow 2, red 5, gray 3. After counts: green 7, yellow 0, red 0, gray 3.

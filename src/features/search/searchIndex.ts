@@ -15,13 +15,13 @@ type IndexedBlock = {
   text: string
 }
 
-export const createSearchIndex = (blocks: BlockRecord[]) => {
+export const createSearchIndex = (blocks: BlockRecord[], fuzzy = true) => {
   const index = new MiniSearch<IndexedBlock>({
     fields: ['text', 'links', 'tags'],
     idField: 'id',
     searchOptions: {
       boost: { links: 2, tags: 1.5, text: 1 },
-      fuzzy: 0.2,
+      fuzzy: fuzzy ? 0.2 : false,
       prefix: true,
     },
     storeFields: ['text', 'links', 'tags'],
