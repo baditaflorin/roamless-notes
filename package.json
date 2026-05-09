@@ -1,7 +1,7 @@
 {
   "name": "roamless-notes",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first outliner with backlinks, graph search, semantic recall, and portable state.",
   "type": "module",
   "scripts": {
