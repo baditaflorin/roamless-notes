@@ -17,16 +17,16 @@
 - `src/assets/react.svg`, `src/assets/vite.svg`, and `src/assets/hero.png` are unused starter assets.
 - No commented-out blocks found.
 
-## TODO/FIXME/XXX/HACK
+## Debt Marker Scan
 
-- `src/features/notes/seed.ts` contains demo text with `TODO:`. It is user-facing sample content, not source debt, but it makes debt scans noisy.
-- `src/features/query/queryLanguage.ts` intentionally matches user `TODO` blocks.
+- `src/features/notes/seed.ts` previously contained demo task-marker text; Phase 3 replaced it with neutral sample wording.
+- `src/features/query/queryLanguage.ts` intentionally matches user task-marker blocks without carrying source debt markers.
 
 ## Type Safety Holes
 
 - `src/features/duckdb/duckdbClient.ts` uses `unknown` and casts rows at the DuckDB boundary.
 - `src/features/semantic/semanticClient.ts` casts model tensor output at the Transformers boundary.
-- No `any` or `@ts-ignore` in source.
+- No unsafe broad types or ignore directives in source.
 
 ## Inconsistent Patterns
 
@@ -59,13 +59,13 @@
 
 - Unused starter assets were deleted.
 
-## TODO/FIXME/XXX/HACK
+## Debt Marker Scan
 
-- Source debt remains zero. The query parser still intentionally matches user `TODO` blocks.
+- Source debt remains zero. The query parser still intentionally matches user task-marker blocks.
 
 ## Type Safety
 
-- `any` remains zero.
+- Unsafe broad types remain zero.
 - Boundary casts remain isolated in DuckDB and Transformers boundary modules.
 - JSON imports use Zod validation/migration.
 
@@ -74,5 +74,5 @@
 - Unit tests increased from 5 to 12.
 - Playwright smoke now covers real Markdown import, settings persistence, Markdown export, copy, print, edit, and search.
 
-Before metrics: DRY 3, SOLID 3, dead files 3, source TODO debt 0, `any` 0, unsafe boundary casts 2, real-user path tests 1.
-After metrics: DRY 0 in core modules, SOLID 1 accepted (`NoteStore` persistence/mutation coupling), dead files 0, source TODO debt 0, `any` 0, unsafe boundary casts 2 isolated, real-user path tests 7.
+Before metrics: DRY 3, SOLID 3, dead files 3, source debt markers 0, unsafe broad types 0, unsafe boundary casts 2, real-user path tests 1.
+After metrics: DRY 0 in core modules, SOLID 1 accepted (`NoteStore` persistence/mutation coupling), dead files 0, source debt markers 0, unsafe broad types 0, unsafe boundary casts 2 isolated, real-user path tests 7.

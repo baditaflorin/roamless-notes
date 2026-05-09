@@ -1,7 +1,7 @@
 {
   "name": "Roamless Notes",
   "short_name": "Roamless",
-  "description": "Local-first outliner with backlinks, graph search, semantic recall, and optional peer-to-peer sync.",
+  "description": "Local-first outliner with backlinks, graph search, semantic recall, and portable state.",
   "start_url": "/roamless-notes/",
   "display": "standalone",
   "background_color": "#fafaf9",

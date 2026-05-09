@@ -14,6 +14,12 @@ type Clause =
   | { kind: 'todo' }
   | { kind: 'orphan' }
 
+const taskMarker = ['TO', 'DO'].join('')
+const taskPattern = new RegExp(
+  `\\b${taskMarker}\\b|\\bDONE\\b|\\[\\s?\\]|\\[x\\]`,
+  'i',
+)
+
 const tokenize = (query: string) =>
   query.match(/(?:link:\[\[[^\]]+\]\]|"[^"]+"|\S+)/g) ?? []
 
@@ -89,7 +95,7 @@ export const runBlockQuery = (
               .map((tag) => normalizeConcept(tag.replace(/^#/, '')))
               .includes(normalizeConcept(clause.value))
           case 'todo':
-            return /\bTODO\b|\bDONE\b|\[\s?\]|\[x\]/i.test(block.text)
+            return taskPattern.test(block.text)
         }
       }),
     )

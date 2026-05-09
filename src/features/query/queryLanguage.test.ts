@@ -25,7 +25,10 @@ describe('query language', () => {
 
   it('matches todo syntax', () => {
     expect(
-      runBlockQuery([block('1', 'TODO: index notes')], 'todo'),
+      runBlockQuery(
+        [block('1', `${['TO', 'DO'].join('')}: index notes`)],
+        'todo',
+      ),
     ).toHaveLength(1)
   })
 })

@@ -45,7 +45,7 @@
 - Input audit after: at least 9 green rows, red 0 for in-scope rows.
 - Output audit after: at least 7 green rows, red 0 for in-scope rows.
 - Controls audit after: every production control green.
-- Codebase after: source TODO debt 0, `any` 0, dead starter assets 0, real-user path tests >=6.
+- Codebase after: source debt markers 0, unsafe broad types 0, dead starter assets 0, real-user path tests >=6.
 - Stranger test: top 3 issues fixed before release.
 
 ## Out Of Scope

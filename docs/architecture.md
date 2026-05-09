@@ -44,3 +44,5 @@ flowchart TB
 - `src/features/graph` owns graph derivation and SVG rendering.
 - `src/features/semantic` owns lazy local model loading.
 - `src/features/duckdb` owns lazy DuckDB-WASM initialization.
+- `src/features/workspace` owns import parsing, export formatting, and workspace schema migration.
+- `src/lib/browserIo.ts` owns browser download, clipboard, and share URL helpers.

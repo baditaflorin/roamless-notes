@@ -27,7 +27,7 @@ Yes. The core product works without auth, secrets, hosted storage, or a runtime 
 
 ## Accepted Tech Debt
 
-- Peer-to-peer sync is represented by CRDT-safe export/import rather than live WebRTC rooms.
+- Live peer-to-peer sync is not shipped; portable CRDT-safe export/import is the v1 transfer path.
 - Semantic model choices are conservative to keep browser compatibility broad.
 - The graph layout is deterministic and lightweight, not force-directed.
 

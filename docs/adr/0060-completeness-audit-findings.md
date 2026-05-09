@@ -10,7 +10,7 @@ Phase 3 must make the app usable for a stranger with their own notes, not just t
 
 ## Decision
 
-Use the audits in `docs/phase3/` as release gates. The success metrics are: all in-scope input/output/control rows green, README claims tested or removed, source TODO debt zero, `any` zero, and at least six real-user path tests.
+Use the audits in `docs/phase3/` as release gates. The success metrics are: all in-scope input/output/control rows green, README claims tested or removed, source debt markers zero, unsafe broad types zero, and at least six real-user path tests.
 
 ## Consequences
 

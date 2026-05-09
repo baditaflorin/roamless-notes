@@ -2,7 +2,7 @@
   "name": "roamless-notes",
   "private": false,
   "version": "0.1.0",
-  "description": "Local-first outliner with backlinks, graph search, semantic recall, and optional peer-to-peer sync.",
+  "description": "Local-first outliner with backlinks, graph search, semantic recall, and portable state.",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",

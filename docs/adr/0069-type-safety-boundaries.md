@@ -18,4 +18,4 @@ Application code sees typed data and boundary risk is localized.
 
 ## Alternatives Considered
 
-Using `any` for speed was rejected.
+Using unsafe broad types for speed was rejected.

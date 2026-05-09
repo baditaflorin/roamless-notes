@@ -34,7 +34,7 @@ export const createSeedBlocks = () => {
     home.id,
   )
   const todo = block(
-    'TODO: Open the query panel and search for link:[[Graph View]]',
+    'Task: Open the query panel and search for link:[[Graph View]]',
     3,
     home.id,
   )
