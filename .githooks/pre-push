@@ -4,4 +4,4 @@ set -euo pipefail
 make test
 make build
 test -s docs/index.html
-SKIP_SMOKE_BUILD=1 make smoke
+SKIP_SMOKE_BUILD=1 ./scripts/smoke.sh
