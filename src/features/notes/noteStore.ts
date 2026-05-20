@@ -18,6 +18,7 @@ const DB_VERSION = 1
 const STORE_NAME = 'snapshots'
 const META_KEY = 'meta'
 const SNAPSHOT_KEY = 'main'
+const SETTINGS_LS_KEY = 'roamless-settings'
 
 type PersistedMeta = {
   selectedId: BlockId | null
@@ -71,6 +72,13 @@ export class NoteStore {
       this.selectedId = meta.selectedId
       this.settings = meta.settings
     }
+    // localStorage is written synchronously on every updateSettings call, so it
+    // always reflects the latest user intent even if the async IDB write races
+    // with a page reload. Prefer localStorage over the IDB meta for settings.
+    const lsSettings = readSettingsFromLocalStorage()
+    if (lsSettings) {
+      this.settings = lsSettings
+    }
 
     if (this.blocksMap.size === 0) {
       this.doc.transact(() => {
@@ -123,6 +131,7 @@ export class NoteStore {
       ...this.settings,
       ...settings,
     }
+    writeSettingsToLocalStorage(this.settings)
     this.emit()
     void this.persistMeta()
   }
@@ -443,6 +452,25 @@ const normalizeBlockOrder = (blocks: BlockRecord[]) => {
       order,
     }
   })
+}
+
+const writeSettingsToLocalStorage = (settings: WorkspaceSettings) => {
+  try {
+    localStorage.setItem(SETTINGS_LS_KEY, JSON.stringify(settings))
+  } catch {
+    // storage full or private browsing — silently ignore
+  }
+}
+
+const readSettingsFromLocalStorage = (): WorkspaceSettings | null => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_LS_KEY)
+    if (!raw) return null
+    const parsed = workspaceSettingsSchema.safeParse(JSON.parse(raw))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
 }
 
 const cloneBlocksForAppend = (blocks: BlockRecord[], rootOffset: number) => {

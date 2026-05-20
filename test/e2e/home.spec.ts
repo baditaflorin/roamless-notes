@@ -4,7 +4,7 @@ test('loads the local notes map and indexes a new block', async ({ page }) => {
   await page.goto('/roamless-notes/')
 
   await expect(page.getByRole('link', { name: 'Roamless Notes' })).toBeVisible()
-  await expect(page.getByText('v0.1.0')).toBeVisible()
+  await expect(page.getByText('v0.2.0')).toBeVisible()
 
   await page.getByLabel('New root block').click()
 
