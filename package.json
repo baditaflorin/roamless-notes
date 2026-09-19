@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.33.1-dev45.0",
-    "@huggingface/transformers": "^4.2.0",
+    "@huggingface/transformers": "^4.3.0",
     "@tanstack/react-query": "^5.100.9",
     "clsx": "^2.1.1",
     "idb": "^8.0.3",
